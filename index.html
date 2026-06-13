@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dead Collection</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --rule: 0.5px solid rgba(255,255,255,0.08);
+  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+body {
+  font-family: var(--sans);
+  background: #0d0d0d;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── 배경 슬라이드쇼 ── */
+#bg-slides {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+.bg-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.bg-slide.active { opacity: 1; }
+
+#bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1;
+}
+
+/* ── 메인 그리드 ── */
+main {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100vh;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: var(--rule);
+  text-decoration: none;
+  transition: background 0.3s;
+}
+.card:last-child { border-right: none; }
+.card:hover { background: rgba(255,255,255,0.04); }
+
+.card img {
+  width: 55%;
+  height: auto;
+  display: block;
+  transition: opacity 0.2s;
+}
+.card:hover img { opacity: 0.75; }
+
+@media (max-width: 640px) {
+  main { grid-template-columns: 1fr; }
+  .card { height: 50vh; border-right: none; border-bottom: var(--rule); }
+  .card:last-child { border-bottom: none; }
+  .card img { width: 60%; }
+}
+</style>
+</head>
+<body>
+
+<div id="bg-slides">
+  <div class="bg-slide active" style="background-image: url('images/mockup/m1.jpg')"></div>
+  <div class="bg-slide" style="background-image: url('images/mockup/m3.jpg')"></div>
+  <div class="bg-slide" style="background-image: url('images/mockup/m6.jpg')"></div>
+</div>
+<div id="bg-overlay"></div>
+
+<main>
+  <a href="coffee/index.html" class="card">
+    <img src="images/button/Dc1.png" alt="Dead Coffee">
+  </a>
+  <a href="cake/index.html" class="card">
+    <img src="images/button/Dc2.png" alt="Dead Cake">
+  </a>
+</main>
+
+<script>
+const slides = document.querySelectorAll('.bg-slide');
+let cur = 0;
+setInterval(() => {
+  slides[cur].classList.remove('active');
+  cur = (cur + 1) % slides.length;
+  slides[cur].classList.add('active');
+}, 4000); // 4초마다 전환
+</script>
+</body>
+</html>

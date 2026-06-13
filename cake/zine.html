@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dead Cake — Zine</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDMyIDMyIj48cG9seWdvbiBwb2ludHM9IjE2LDQgMzAsMjggMiwyOCIgZmlsbD0id2hpdGUiLz48L3N2Zz4=") 11 11, auto !important; }
+:root {
+  --bg: #0d0d0d;
+  --fg: #f0f0f0;
+  --muted: #555;
+  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+body {
+  font-family: var(--sans);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg);
+}
+
+#viewer { position: fixed; inset: 0; background: var(--bg); }
+
+#spread-container {
+  position: absolute;
+  inset: 3.5rem 5rem 5.5rem;
+  user-select: none;
+}
+.slide {
+  position: absolute; inset: 0;
+  opacity: 0; transition: opacity 0.55s ease; pointer-events: none;
+}
+.slide.on { opacity: 1; pointer-events: all; }
+.slide img { width: 100%; height: 100%; object-fit: contain; display: block; background: var(--bg); }
+.ph {
+  width: 100%; height: 100%; background: #111;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+}
+.ph span { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+
+#click-l, #click-r {
+  position: absolute; top: 0; bottom: 0; width: 50%; z-index: 2;
+}
+#click-l { left: 0; }
+#click-r { right: 0; }
+
+#hud {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center;
+  padding-bottom: 2rem; pointer-events: none;
+}
+#progress { width: 100%; height: 0.5px; background: rgba(255,255,255,0.08); margin-bottom: 1.2rem; }
+#bar { height: 100%; background: rgba(255,255,255,0.35); transition: width 0.45s ease; }
+#controls { display: flex; gap: 2.5rem; pointer-events: all; }
+.btn {
+  background: none; border: 0.5px solid rgba(255,255,255,0.18); color: var(--muted);
+  width: 34px; height: 34px; border-radius: 50%; font-size: 14px;
+  transition: border-color 0.15s, color 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn:hover { border-color: var(--fg); color: var(--fg); }
+.btn:disabled { opacity: 0.2; pointer-events: none; }
+
+#page-counter {
+  position: absolute; bottom: 2rem; right: 2rem;
+  font-size: 10px; letter-spacing: 0.12em; color: rgba(255,255,255,0.2);
+  z-index: 10; pointer-events: none;
+}
+
+#nav-left {
+  position: fixed; top: 1.8rem; left: 2rem; z-index: 100;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.25); text-decoration: none; transition: color 0.15s;
+}
+#nav-left:hover { color: var(--fg); }
+
+#site-nav {
+  position: fixed; top: 1.8rem; right: 2rem; z-index: 100;
+  display: flex; gap: 2rem; align-items: center;
+}
+#site-nav a {
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.25); text-decoration: none; transition: color 0.15s;
+}
+#site-nav a:hover, #site-nav a.active { color: var(--fg); }
+#site-nav img { height: 16px; width: auto; display: block; opacity: 0.25; transition: opacity 0.15s; }
+#site-nav a:hover img { opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<a href="index.html" id="nav-left">Dead Cake</a>
+<nav id="site-nav">
+  <a href="zine.html" class="active">Page</a>
+  <a href="archive.html">Archive</a>
+  <a href="../coffee/index.html"><img src="../images/button/Dc1-1.png" alt="Dead Coffee"></a>
+</nav>
+
+<section id="viewer">
+  <div id="spread-container">
+    <div id="click-l"></div>
+    <div id="click-r"></div>
+  </div>
+  <div id="hud">
+    <div id="progress"><div id="bar"></div></div>
+    <div id="controls">
+      <button class="btn" id="bp" disabled>&#8592;</button>
+      <button class="btn" id="bn">&#8594;</button>
+    </div>
+  </div>
+  <div id="page-counter">01 / 14</div>
+</section>
+
+<script>
+const TOTAL = 14;
+let cur = 0, busy = false;
+const cont = document.getElementById('spread-container');
+const bar = document.getElementById('bar');
+const bp = document.getElementById('bp');
+const bn = document.getElementById('bn');
+const clickL = document.getElementById('click-l');
+const clickR = document.getElementById('click-r');
+const counter = document.getElementById('page-counter');
+
+for (let i = 0; i < TOTAL; i++) {
+  const s = document.createElement('div');
+  s.className = 'slide' + (i === 0 ? ' on' : '');
+  const img = document.createElement('img');
+  img.src = '../images/cake/zine/' + (i + 1) + '.jpg';
+  img.alt = 'p.' + (i + 1);
+  img.loading = i < 3 ? 'eager' : 'lazy';
+  img.onerror = () => { s.innerHTML = '<div class="ph"><span>DEAD CAKE</span><span>' + (i+1) + ' / ' + TOTAL + '</span></div>'; };
+  s.appendChild(img);
+  cont.insertBefore(s, clickL);
+}
+
+function ui() {
+  bar.style.width = ((cur + 1) / TOTAL * 100) + '%';
+  bp.disabled = cur === 0;
+  bn.disabled = cur === TOTAL - 1;
+  counter.textContent = String(cur + 1).padStart(2, '0') + ' / ' + String(TOTAL).padStart(2, '0');
+}
+function go(n) {
+  if (busy || n === cur || n < 0 || n >= TOTAL) return;
+  busy = true;
+  cont.querySelectorAll('.slide')[cur].classList.remove('on');
+  cur = n;
+  cont.querySelectorAll('.slide')[cur].classList.add('on');
+  ui();
+  setTimeout(() => { busy = false; }, 580);
+}
+ui();
+bn.addEventListener('click', () => go(cur + 1));
+bp.addEventListener('click', () => go(cur - 1));
+clickR.addEventListener('click', () => go(cur + 1));
+clickL.addEventListener('click', () => go(cur - 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') go(cur + 1);
+  if (e.key === 'ArrowLeft') go(cur - 1);
+});
+let tx = 0;
+cont.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+cont.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 40) dx < 0 ? go(cur + 1) : go(cur - 1);
+});
+</script>
+</body>
+</html>

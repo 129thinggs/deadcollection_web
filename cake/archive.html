@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dead Cake — Archive</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDMyIDMyIj48cG9seWdvbiBwb2ludHM9IjE2LDQgMzAsMjggMiwyOCIgZmlsbD0id2hpdGUiLz48L3N2Zz4=") 11 11, auto !important; }
+:root {
+  --bg: #0d0d0d;
+  --fg: #f0f0f0;
+  --muted: #444;
+  --muted2: #777;
+  --rule: 0.5px solid #1e1e1e;
+  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--fg);
+  height: 100vh;
+  
+  overflow: hidden;
+}
+
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.8rem 2rem;
+}
+.nav-title {
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted2); text-decoration: none; transition: color 0.15s;
+}
+.nav-title:hover { color: var(--fg); }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  text-decoration: none; color: var(--muted); transition: color 0.15s;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--fg); }
+
+#stage { position: fixed; inset: 0; z-index: 1; }
+#bg-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+#specimen-frame {
+  position: absolute;
+  overflow: hidden;
+  background: transparent;
+}
+#specimen-frame img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+#specimen-frame::after {
+  content: '';
+  position: absolute; inset: 0;
+  border: 1px solid rgba(255,255,255,0);
+  transition: border-color 0.3s;
+  pointer-events: none;
+}
+#specimen-frame:hover::after { border-color: rgba(255,255,255,0.2); }
+
+#counter {
+  position: fixed; bottom: 1.8rem; right: 2rem;
+  z-index: 50; font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted2); pointer-events: none;
+}
+
+footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 50; border-top: var(--rule);
+  padding: 1rem 2rem; display: flex;
+  justify-content: space-between;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(13,13,13,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-title">Dead Collection</a>
+  <ul class="nav-links">
+    <li><a href="zine.html">Page</a></li>
+    <li><a href="archive.html" class="active">Archive</a></li>
+    <li><a href="../coffee/archive.html"><img src="../images/button/Dc1-1.png" alt="Dead Coffee" style="height:16px;width:auto;display:block;opacity:0.4;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4"></a></li>
+  </ul>
+</nav>
+
+<div id="stage">
+  <img src="../images/cake/archive/kbg.jpg" id="bg-img" alt="background">
+  <div id="specimen-frame">
+    <img src="" id="specimen-img" alt="">
+  </div>
+</div>
+
+<div id="counter">K01 / K07</div>
+
+<footer>
+  <span>Vol. 2 — Dead Cake · Archive</span>
+  <span>@129thinggs</span>
+</footer>
+
+<script>
+const TOTAL = 7;
+const BOX = { left: 0.41321, top: 0.38380, w: 0.17324, h: 0.23194 };
+
+let current = 1;
+
+const bgImg   = document.getElementById('bg-img');
+const frame   = document.getElementById('specimen-frame');
+const specImg = document.getElementById('specimen-img');
+const counter = document.getElementById('counter');
+
+function positionFrame() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const natW = bgImg.naturalWidth || 2892, natH = bgImg.naturalHeight || 2160;
+  const imgRatio = natW / natH, stageRatio = vw / vh;
+
+  let renderedW, renderedH, offX, offY;
+  if (stageRatio > imgRatio) {
+    renderedW = vw; renderedH = vw / imgRatio; offX = 0; offY = (vh - renderedH) / 2;
+  } else {
+    renderedH = vh; renderedW = vh * imgRatio; offX = (vw - renderedW) / 2; offY = 0;
+  }
+
+  frame.style.left   = (offX + BOX.left * renderedW) + 'px';
+  frame.style.top    = (offY + BOX.top  * renderedH) + 'px';
+  frame.style.width  = (BOX.w * renderedW) + 'px';
+  frame.style.height = (BOX.h * renderedH) + 'px';
+}
+
+function select(n) {
+  current = Math.max(1, Math.min(TOTAL, n));
+  specImg.src = '../images/cake/archive/k' + current + '.jpg';
+  counter.textContent = 'K' + String(current).padStart(2, '0') + ' / K' + String(TOTAL).padStart(2, '0');
+}
+
+frame.addEventListener('click', () => select(current < TOTAL ? current + 1 : 1));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') select(current + 1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   select(current - 1);
+});
+
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 40) dx < 0 ? select(current + 1) : select(current - 1);
+});
+
+bgImg.addEventListener('load', positionFrame);
+window.addEventListener('resize', positionFrame);
+if (bgImg.complete) positionFrame();
+
+select(1);
+</script>
+</body>
+</html>
